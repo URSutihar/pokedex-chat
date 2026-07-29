@@ -413,6 +413,30 @@ Verified on the deployment: SSE streams incrementally (162 events over 2.3 s, no
 buffered), the CSP and the other headers survive Vercel's edge, `role:"system"`
 still returns 422, and the sprite proxy serves real PNGs.
 
+#### Turning on the shared-key + password option
+
+The **Shared key + password** tab in the browser is inert until the deployment
+actually has a key — a password cannot unlock something that is not there. It
+enables itself as soon as both variables are set; no code change, no UI flag.
+
+```bash
+python scripts/set_password.py --show --random   # prints a password and its hash; writes nothing
+vercel env add OPENROUTER_API_KEY production     # paste your key
+vercel env add APP_PASSWORD production           # paste the scrypt$… hash
+vercel deploy --prod --yes
+```
+
+Check it took:
+
+```bash
+curl -s https://<your-deployment>/api/config
+# {"auth_mode": "password", ...}   was "byok"
+```
+
+Share the **first** value from `--show` with people; the hash is what the server
+stores, so the plaintext never sits in Vercel's dashboard. Both routes then work
+side by side: type the password, or paste your own key to override it.
+
 **Serverless caveat, stated plainly.** The rate limiter, lockout table and spend
 ledger are in-process, and Vercel runs many instances — so on Vercel those caps
 are *per instance* and much weaker than on a single machine. Two consequences:

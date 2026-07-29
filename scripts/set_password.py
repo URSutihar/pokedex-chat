@@ -46,7 +46,30 @@ def main() -> int:
     ap.add_argument("--plain", action="store_true", help="store the password in clear text")
     ap.add_argument("--random", action="store_true", help="generate a 20-char password")
     ap.add_argument("--clear", action="store_true", help="remove the password (locks the key)")
+    ap.add_argument(
+        "--show",
+        action="store_true",
+        help="print the password and its hash without writing anything — "
+             "for pasting into a host's environment variables",
+    )
     args = ap.parse_args()
+
+    if args.show:
+        pw = (
+            "".join(secrets.choice(WORDS_ALPHABET) for _ in range(20))
+            if args.random
+            else getpass.getpass("password: ")
+        )
+        if not pw:
+            print("Nothing entered.", file=sys.stderr)
+            return 1
+        print()
+        print("  Share with users     :", pw)
+        print("  APP_PASSWORD value   :", hash_password(pw))
+        print()
+        print("  Nothing was written. Paste the second value into your host's")
+        print("  environment variables; the first is what people type in the browser.")
+        return 0
 
     if args.clear:
         write_env_value(ENV_PATH, "APP_PASSWORD", "")
