@@ -451,6 +451,10 @@ body {
   background: transparent; color: var(--text-2); border: none; border-radius: 6px;
 }
 .seg-btn[aria-selected="true"] { background: var(--surface-3); color: var(--text); }
+/* A disabled tab must read as disabled. Left looking live, it swallows the click
+   and the user concludes the app is broken. */
+.seg-btn:disabled { opacity: .4; cursor: not-allowed; }
+.seg-btn:disabled:hover { background: transparent; }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field > span { font-size: 12.5px; color: var(--text-2); }

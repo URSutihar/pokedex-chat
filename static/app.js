@@ -642,8 +642,18 @@ function openSettings() {
   const sharedUseless = NO_SHARED.has(authMode);
   const mode = sharedUseless ? "own" : creds.mode;
   paintSettings(mode);
+  // Both options stay visible always. When this particular server carries no key
+  // of its own, a password has nothing to unlock — so the shared tab is disabled
+  // and *looks* it, with a tooltip saying why, rather than silently swallowing
+  // the click. It re-enables by itself the moment the server has a key.
   segBtns.forEach(b => {
-    if (b.dataset.mode === "shared") b.disabled = sharedUseless;
+    if (b.dataset.mode !== "shared") return;
+    b.disabled = sharedUseless;
+    b.title = sharedUseless
+      ? "This deployment has no key of its own, so there is no shared key for a "
+        + "password to unlock. Set OPENROUTER_API_KEY and APP_PASSWORD on the "
+        + "server to enable this."
+      : "Unlock the server's own key with the shared password";
   });
   pwInput.value = creds.password;
   keyInput.value = creds.key;
