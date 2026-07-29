@@ -14,7 +14,42 @@ import sqlglot.errors
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "data" / "pokedex.sqlite"
+DB_GZ = ROOT / "data" / "pokedex.sqlite.gz"
 SPRITE_ROOT = ROOT / "assets" / "sprites"
+
+# Serverless hosts ship a read-only bundle, so the 80 MB database travels as a
+# 19 MB gzip in the repo and is unpacked once per cold start into a writable
+# directory. Locally the plain file already exists and none of this runs.
+DB_CACHE_DIR = Path(os.environ.get("POKEDEX_DB_CACHE", "/tmp/pokedex-db"))
+
+
+def _resolve_db() -> Path:
+    if DB_PATH.is_file():
+        return DB_PATH
+    if not DB_GZ.is_file():
+        raise RuntimeError(
+            f"No database at {DB_PATH} and no {DB_GZ.name} to unpack. Run build_db.py."
+        )
+    target = DB_CACHE_DIR / "pokedex.sqlite"
+    if target.is_file() and target.stat().st_size > 0:
+        return target
+    import gzip
+    import shutil
+    import tempfile
+
+    DB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    # Unpack to a temp name and rename: two cold starts racing must never let
+    # either open a half-written database.
+    fd, tmp_name = tempfile.mkstemp(dir=DB_CACHE_DIR, suffix=".part")
+    os.close(fd)
+    tmp = Path(tmp_name)
+    with gzip.open(DB_GZ, "rb") as src, tmp.open("wb") as dst:
+        shutil.copyfileobj(src, dst, length=1024 * 1024)
+    tmp.replace(target)
+    return target
+
+
+_db_file: Path | None = None
 
 MAX_ROWS = 400          # hard cap returned to the model
 STMT_TIMEOUT_MS = 8000
@@ -30,9 +65,12 @@ _local = threading.local()
 
 
 def _conn() -> sqlite3.Connection:
+    global _db_file
     c = getattr(_local, "conn", None)
     if c is None:
-        c = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, check_same_thread=False)
+        if _db_file is None:
+            _db_file = _resolve_db()
+        c = sqlite3.connect(f"file:{_db_file}?mode=ro", uri=True, check_same_thread=False)
         c.row_factory = sqlite3.Row
         c.execute("PRAGMA query_only = ON")
         _local.conn = c

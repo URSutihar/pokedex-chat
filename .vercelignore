@@ -1,0 +1,17 @@
+# Never upload these: 754 MB of sprites, the 80 MB raw DB (the .gz ships instead),
+# the local venv, and anything holding secrets.
+assets/
+data/csv/
+data/pokedex.sqlite
+data/pokedex.sqlite-wal
+data/pokedex.sqlite-shm
+.venv/
+__pycache__/
+tests/
+evals/
+.git/
+.env
+audit.md
+Dockerfile
+docker-compose.yml
+Caddyfile

@@ -15,6 +15,7 @@ process, so this cannot be turned into an open forward proxy: only
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from pathlib import Path
 
@@ -30,7 +31,7 @@ ALLOWED = re.compile(
     r"|items/[a-z0-9-]{1,64}\.png)$"
 )
 
-CACHE_DIR = Path("/tmp/pokedex-sprites")
+CACHE_DIR = Path(os.environ.get("SPRITE_CACHE_DIR", "/tmp/pokedex-sprites"))
 MAX_BYTES = 3 * 1024 * 1024          # a sprite is ~50-400 KB; anything larger is wrong
 _locks: dict[str, asyncio.Lock] = {}
 
