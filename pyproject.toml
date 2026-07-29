@@ -1,3 +1,29 @@
+[project]
+# Vercel's Python builder drives `uv`, which requires a real project table here;
+# without it the deploy fails at `uv lock`. Keep these in step with
+# requirements.txt (that file, plus requirements.lock, is what non-uv installs use).
+name = "pokedex-chat"
+version = "1.0.0"
+description = "A grounded Pokemon analyst: every number computed by SQL over a local Pokedex."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.140.1",
+  "uvicorn[standard]==0.51.0",
+  "httpx==0.28.1",
+  "pydantic==2.13.4",
+  "pydantic-settings==2.14.2",
+  "sqlglot==30.14.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Flat layout: the modules sit at the repo root, so name them rather than letting
+# setuptools guess (it would otherwise try to package data/, static/, tests/...).
+py-modules = ["config", "security", "observability", "pokedb", "sprites", "agent", "server"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
