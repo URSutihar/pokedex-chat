@@ -1,0 +1,33 @@
+# Reference topology. The reverse proxy is where TLS, the body-size limit and
+# slow-loris protection live — uvicorn does none of those.
+services:
+  pokedex:
+    build: .
+    restart: unless-stopped
+    expose: ["8000"]
+    environment:
+      TRUST_PROXY: "true"        # honour X-Forwarded-For from caddy below
+      PUBLIC_URL: "https://pokedex.example.com"
+      LOG_FORMAT: "json"
+    volumes:
+      # .env holds the key and password. Mounted read-write on purpose: that is
+      # what lets `scripts/set_password.py` rotate the password without a restart.
+      - ./.env:/app/.env
+      - ./assets/sprites:/app/assets/sprites:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [pokedex]
+
+volumes:
+  caddy_data:

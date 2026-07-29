@@ -1,0 +1,41 @@
+name: prompt eval
+
+# The system prompt is the product. A change to it must be scored against the
+# golden dataset before merge — this is the only workflow that spends tokens, so
+# it runs only when the prompt or the dataset actually changes.
+on:
+  pull_request:
+    paths:
+      - "agent.py"
+      - "pokedb.py"
+      - "evals/**"
+  workflow_dispatch:
+    inputs:
+      model:
+        description: model to score
+        default: deepseek/deepseek-v3.2
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    # a fork PR must not be able to spend the key
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements-dev.txt pyyaml
+      - name: build database
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/PokeAPI/pokeapi.git _src
+          git -C _src sparse-checkout set data/v2/csv
+          mkdir -p data/csv && mv _src/data/v2/csv/*.csv data/csv/ && rm -rf _src
+          python build_db.py
+      - name: score against the golden dataset
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: python evals/run_eval.py --live --model "${{ inputs.model || 'deepseek/deepseek-v3.2' }}"

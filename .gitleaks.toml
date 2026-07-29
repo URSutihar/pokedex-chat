@@ -1,0 +1,26 @@
+# Repo-specific rules on top of the defaults.
+title = "pokedex-chat"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "openrouter-key"
+description = "OpenRouter API key"
+regex = '''sk-or-v1-[0-9a-f]{48,}'''
+tags = ["key", "openrouter"]
+
+[[rules]]
+id = "groq-key"
+description = "Groq API key"
+regex = '''gsk_[A-Za-z0-9]{40,}'''
+tags = ["key", "groq"]
+
+[allowlist]
+description = "documentation placeholders"
+regexes = [
+  '''sk-or-v1-\.\.\.''',
+  '''sk-or-v1-test-key-not-real''',
+  '''sk-or-v1-(x|server|mine)''',
+]
+paths = ['''requirements\.lock''']

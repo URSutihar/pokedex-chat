@@ -1,0 +1,9 @@
+# Direct dependencies, pinned exactly.
+# The full transitive set with hashes is in requirements.lock — use that for any
+# deployment (`pip install -r requirements.lock`). This file is what you edit.
+fastapi==0.140.1
+uvicorn[standard]==0.51.0
+httpx==0.28.1
+pydantic==2.13.4
+pydantic-settings==2.14.2
+sqlglot==30.14.0

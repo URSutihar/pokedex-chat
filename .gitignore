@@ -1,0 +1,32 @@
+# secrets — never commit
+.env
+.env.local
+*.key
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# generated data (rebuild with build_db.py)
+data/pokedex.sqlite
+data/pokedex.sqlite-wal
+data/pokedex.sqlite-shm
+
+# bulk assets — 754 MB of sprites, 40 MB of source CSVs.
+# Fetch them with the commands in the README instead of committing them.
+assets/
+data/csv/
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# local editor/tooling
+.claude/

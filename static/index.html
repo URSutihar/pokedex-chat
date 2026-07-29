@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Pokedex</title>
+<link rel="stylesheet" href="/static/vendor/katex/katex.min.css" />
+<link rel="stylesheet" href="/static/styles.css" />
+<link rel="icon" href="/sprites/pokemon/other/official-artwork/25.png" />
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <button id="newchat" class="new-btn" type="button">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        New chat
+      </button>
+    </div>
+    <nav class="conv-list" id="conv-list" aria-label="Conversations"></nav>
+    <div class="sidebar-foot">
+      <button id="export" class="link-btn" type="button">Export</button>
+      <button id="wipe" class="link-btn danger" type="button">Delete all</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button id="menu" class="icon-btn only-mobile" title="Conversations" aria-label="Conversations">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="brand-name">Pokedex</span>
+        <span class="brand-sub" id="dbstat"></span>
+      </div>
+      <div class="topbar-actions">
+        <select id="model" class="model-select" title="Model — applies from your next message"></select>
+        <button id="theme" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="sun" d="M12 4V2M12 22v-2M4 12H2m20 0h-2M5.6 5.6 4.2 4.2m15.6 15.6-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="moon" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="settings" class="icon-btn" title="Settings — API key" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="thread" class="thread">
+      <section class="welcome" id="welcome">
+        <h1>Ask the Pokedex.</h1>
+        <p>Every number is computed live with SQL over a local database of all
+           1&nbsp;025 species and 1&nbsp;351 forms — megas, Gigantamax, regionals,
+           Z&#8209;moves, full learnsets. Strategy and metagame come from the web.</p>
+        <div class="suggestions" id="suggestions"></div>
+      </section>
+    </main>
+
+    <form class="composer" id="composer" autocomplete="off">
+      <div class="composer-box">
+        <textarea id="input" rows="1" placeholder="Which dual typing hits the most types super-effectively with STAB?" spellcheck="false"></textarea>
+        <button type="button" id="stop" class="stop-btn" aria-label="Stop generating" hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>
+        </button>
+        <button type="submit" id="send" class="send-btn" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <p class="composer-hint" id="hint">Enter to send · Shift+Enter for a new line</p>
+    </form>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<dialog id="settings-dialog" class="dialog">
+  <form method="dialog" class="dialog-inner" id="settings-form">
+    <h2>API access</h2>
+    <p class="dialog-note" id="mode-note"></p>
+
+    <div class="seg" role="tablist">
+      <button type="button" class="seg-btn" data-mode="shared" role="tab">Shared key + password</button>
+      <button type="button" class="seg-btn" data-mode="own" role="tab">My own key</button>
+    </div>
+
+    <label class="field" id="field-password">
+      <span>Password</span>
+      <input type="password" id="app-password" autocomplete="current-password"
+             placeholder="get your password from Utkarsh" />
+      <small>Unlocks the key configured on the server. The key itself is never sent to your browser.</small>
+    </label>
+
+    <label class="field" id="field-key">
+      <span>OpenRouter API key</span>
+      <input type="password" id="own-key" autocomplete="off" spellcheck="false"
+             placeholder="sk-or-v1-…" />
+      <small>
+        Kept in this browser's <code>localStorage</code> and sent with each request to this
+        server only — never stored on disk server-side, never logged, never shared with
+        another user. Get one at
+        <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a>.
+        Clear the box and save to forget it.
+      </small>
+    </label>
+
+    <p class="dialog-status" id="settings-status"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn ghost" id="settings-clear">Forget</button>
+      <button type="button" class="btn ghost" id="settings-cancel">Cancel</button>
+      <button type="button" class="btn primary" id="settings-save">Verify &amp; save</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/static/vendor/marked.umd.js"></script>
+<script src="/static/vendor/purify.min.js"></script>
+<script src="/static/vendor/highlight.min.js"></script>
+<script src="/static/vendor/katex/katex.min.js"></script>
+<script src="/static/vendor/katex/auto-render.min.js"></script>
+<script src="/static/vendor/mermaid.min.js"></script>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

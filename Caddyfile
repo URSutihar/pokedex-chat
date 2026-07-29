@@ -1,0 +1,15 @@
+# Automatic HTTPS, a request-size cap, and sane timeouts — none of which uvicorn
+# provides. Replace the hostname.
+pokedex.example.com {
+	encode zstd gzip
+
+	request_body {
+		max_size 1MB
+	}
+
+	# SSE must not be buffered or the answer arrives all at once at the end.
+	reverse_proxy pokedex:8000 {
+		flush_interval -1
+		header_up X-Forwarded-For {remote_host}
+	}
+}
