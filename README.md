@@ -385,6 +385,53 @@ against the lockfile, and a Docker build. Dependencies are pinned in
 
 ## Deployment
 
+Live: **https://pokedex-chat-l41ggtph6-ursutihars-projects.vercel.app**
+
+### Vercel (what the live instance runs)
+
+```bash
+vercel link --yes --project pokedex-chat
+vercel deploy --prod --yes
+```
+
+Two hosting facts drive the setup, and neither is worked around by weakening the
+app:
+
+- **No 754 MB of sprites in a bundle.** `SPRITE_SOURCE=proxy` serves them from
+  this origin, fetching allowlisted paths from a hard-coded upstream. Pointing
+  `<img>` at a CDN instead would have meant widening the CSP to that host, which
+  re-opens the markdown-image exfiltration path — so the bytes come through us
+  and `img-src 'self'` stands. Only
+  `pokemon/other/{official-artwork,home}[/shiny]/<digits>.png` and
+  `items/<safe-ident>.png` resolve; everything else 404s before any request
+  leaves the process.
+- **Read-only bundle.** The 80 MB database travels as a 19 MB gzip and is
+  unpacked into `/tmp` on cold start, via temp-file-and-rename so racing cold
+  starts never open a half-written file.
+
+Verified on the deployment: SSE streams incrementally (162 events over 2.3 s, not
+buffered), the CSP and the other headers survive Vercel's edge, `role:"system"`
+still returns 422, and the sprite proxy serves real PNGs.
+
+**Serverless caveat, stated plainly.** The rate limiter, lockout table and spend
+ledger are in-process, and Vercel runs many instances — so on Vercel those caps
+are *per instance* and much weaker than on a single machine. Two consequences:
+
+- Prefer **BYOK** for a public URL. With no `OPENROUTER_API_KEY` set the server
+  has nothing to drain, and every visitor pays for their own calls. This is what
+  the live instance does.
+- If you do put your key up, use a **spend-limited** OpenRouter key and treat
+  `DAILY_USD_CEILING` as a hint rather than a guarantee. For a hard guarantee,
+  run the container (below) or move the three structures in `security.py` to
+  Redis.
+
+Password changes on Vercel are **not** instant the way they are locally: there is
+no writable `.env`, so `APP_PASSWORD` is an environment variable and changing it
+redeploys (~30 s). The hot-reload path still works anywhere with a writable
+`.env` — the container, a VM, your laptop.
+
+### Container (single machine, all guarantees intact)
+
 ```bash
 docker compose up -d      # app + Caddy for TLS
 ```
